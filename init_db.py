@@ -3,14 +3,71 @@ import psycopg2 as ps
 
 def getConnection():
     configs = load_configs()
-    
-    try:
-        conn = ps.connect(**configs)
-        print("database connected successfully.")
 
-        return conn
-    except Exception as e:
-        print(e)
+    conn = ps.connect(**configs)
+    print("database connected successfully.")
+
+    return conn
+
+def create_tables():
+    conn = getConnection()
+    curr = conn.cursor()
+
+    curr.execute("DROP TABLE IF EXISTS rounds, matches, automata;")
+
+    curr.execute("""
+        CREATE TABLE IF NOT EXISTS automata(
+                 id SERIAL PRIMARY KEY,
+                 name VARCHAR(20) UNIQUE NOT NULL,
+                 points INT
+                 );
+    """)
+
+    curr.execute("""
+        CREATE TABLE IF NOT EXISTS matches(
+                 id SERIAL PRIMARY KEY,
+                 automata_a INT NOT NULL,
+                 automata_b INT NOT NULL,
+                 points_a INT,
+                 points_b INT,
+                 winner INT,
+                 FOREIGN KEY (automata_a) REFERENCES automata(id),
+                 FOREIGN KEY (automata_b) REFERENCES automata(id),
+                 FOREIGN KEY (winner) REFERENCES automata(id)
+                 );
+    """)
+
+    curr.execute("""
+        CREATE TABLE IF NOT EXISTS rounds(
+                 match_id INT,
+                 round INT,
+                 move_a INT,
+                 move_b INT,
+                 score_a INT,
+                 score_b INT,
+                 PRIMARY KEY (match_id, round),
+                 FOREIGN KEY (match_id) REFERENCES matches(id)
+                 );
+    """)
+
+    conn.commit()
+
+    curr.close()
+    conn.close()
+
+    print("Tables created successfully")
 
 if __name__ == "__main__":
-    getConnection()
+    conn = getConnection()
+    curr = conn.cursor()
+
+    print(conn.get_dsn_parameters())
+
+    curr.execute("SELECT version();")
+
+    print(curr.fetchone())
+
+    create_tables()
+
+    curr.close()
+    conn.close()
