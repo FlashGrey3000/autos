@@ -31,8 +31,8 @@ class Simulator:
             self.points_a += rp_a
             self.points_b += rp_b
 
-            self.bot_a.observe()
-            self.bot_b.observe()
+            self.bot_a.observe(opp_move=move_b)
+            self.bot_b.observe(opp_move=move_a)
 
             self.round_data.append((r, move_a, move_b, rp_a, rp_b))
         
@@ -88,12 +88,21 @@ class Simulator:
 if __name__ == "__main__":
     from algos.Evil import Evil
     from algos.Nice import Nice
+    from algos.BadTitForTat import BadTitForTat
+    from algos.Dumb import Dumb
+    from algos.Forgiver import Forgiver
+    from algos.Grudger import Grudger
+    from algos.Perverse import Perverse
+    from algos.TitForTat import TitForTat
 
-    bot_a = Evil()
-    bot_b = Nice()
+    autos = [Evil(), Nice(), BadTitForTat(), Dumb(), Forgiver(), Grudger(), Perverse(), TitForTat()]
 
-    sim = Simulator(bot_a=bot_a, bot_b=bot_b)
+    for bot_a in autos:
+        for bot_b in autos:
+            if bot_a.name == bot_b.name:
+                continue
+            sim = Simulator(bot_a=bot_a, bot_b=bot_b)
 
-    sim.run()
+            sim.run()
 
-    sim.results()
+            sim.results()
