@@ -41,8 +41,8 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS rounds(
                  match_id INT,
                  round INT,
-                 move_a INT,
-                 move_b INT,
+                 move_a BOOLEAN,
+                 move_b BOOLEAN,
                  score_a INT,
                  score_b INT,
                  PRIMARY KEY (match_id, round),
@@ -68,6 +68,19 @@ if __name__ == "__main__":
     print(curr.fetchone())
 
     create_tables()
+
+    from algos.Evil import Evil
+    from algos.Nice import Nice
+    autos = [Evil(), Nice()]
+
+    init_auto_sql = ("INSERT INTO automata"
+                     "(name, points)"
+                     "VALUES (%s, %s);")
+
+    curr.executemany(init_auto_sql,
+                     [(a.name, 0) for a in autos])
+    
+    conn.commit()
 
     curr.close()
     conn.close()
