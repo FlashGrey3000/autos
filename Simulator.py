@@ -60,7 +60,14 @@ class Simulator:
                      "VALUES (%s, %s, %s, %s, %s)"
                      "RETURNING id")
         
-        curr.execute(match_sql, (self.bot_a.id, self.bot_b.id, self.points_a, self.points_b, self.bot_a.id if self.points_a > self.points_b else self.bot_b.id))
+        if self.points_a > self.points_b:
+            winner_id = self.bot_a.id
+        elif self.points_a < self.points_b:
+            winner_id = self.bot_b.id
+        else:
+            winner_id = -1
+
+        curr.execute(match_sql, (self.bot_a.id, self.bot_b.id, self.points_a, self.points_b, winner_id))
 
         match_id = curr.fetchone()[0]
 

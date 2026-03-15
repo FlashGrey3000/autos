@@ -81,6 +81,9 @@ if __name__ == "__main__":
     init_auto_sql = ("INSERT INTO automata"
                      "(name, points)"
                      "VALUES (%s, %s);")
+    
+    curr.execute("INSERT INTO automata VALUES (%s, %s, %s)",
+                 (-1, "Tie", 0))
 
     curr.executemany(init_auto_sql,
                      [(a.name, 0) for a in autos])
