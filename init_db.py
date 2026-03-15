@@ -5,7 +5,6 @@ def getConnection():
     configs = load_configs()
 
     conn = ps.connect(**configs)
-    print("database connected successfully.")
 
     return conn
 
@@ -71,7 +70,13 @@ if __name__ == "__main__":
 
     from algos.Evil import Evil
     from algos.Nice import Nice
-    autos = [Evil(), Nice()]
+    from algos.BadTitForTat import BadTitForTat
+    from algos.Dumb import Dumb
+    from algos.Forgiver import Forgiver
+    from algos.Grudger import Grudger
+    from algos.Perverse import Perverse
+    from algos.TitForTat import TitForTat
+    autos = [Evil(), Nice(), BadTitForTat(), Dumb(), Forgiver(), Grudger(), Perverse(), TitForTat()]
 
     init_auto_sql = ("INSERT INTO automata"
                      "(name, points)"
