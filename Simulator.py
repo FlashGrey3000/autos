@@ -22,7 +22,7 @@ class Simulator:
         self.round_data = []
     
     def run(self):
-        for r in range(1, 101):
+        for r in range(1, self.num_rounds):
             move_a = self.bot_a.move()
             move_b = self.bot_b.move()
 
@@ -84,9 +84,9 @@ class Simulator:
     
     def results(self):
         if self.points_b > self.points_a:
-            print(f"{bot_b.name} wins with {self.points_b} points")
+            print(f"{self.bot_b.name} wins with {self.points_b} points")
         elif self.points_a > self.points_b:
-            print(f"{bot_a.name} wins with {self.points_a} points")
+            print(f"{self.bot_a.name} wins with {self.points_a} points")
         else:
             print(f"Tie at {self.points_a} points")
             
