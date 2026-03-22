@@ -39,49 +39,41 @@ class Simulator:
         self.commit_data()
     
     def commit_data(self):
-        conn = getConnection()
-        curr = conn.cursor()
+        with getConnection() as conn:
+            with conn.cursor() as curr:
 
-        bot_id_sql = ("SELECT * FROM automata")
-        curr.execute(bot_id_sql)
+                bot_id_sql = ("SELECT * FROM automata WHERE name = %s")
+                curr.execute(bot_id_sql, (self.bot_a.name, ))
 
-        records = curr.fetchall()
+                self.bot_a.id = curr.fetchone()[0]
 
-        for record in records:
-            if record[1] == self.bot_a.name:
-                self.bot_a.id = record[0]
+                curr.execute(bot_id_sql, (self.bot_b.name, ))
+                self.bot_b.id = curr.fetchone()[0]
+                
+                match_sql = ("INSERT INTO matches"
+                            "(automata_a, automata_b, points_a, points_b, winner)"
+                            "VALUES (%s, %s, %s, %s, %s)"
+                            "RETURNING id")
+                
+                if self.points_a > self.points_b:
+                    winner_id = self.bot_a.id
+                elif self.points_a < self.points_b:
+                    winner_id = self.bot_b.id
+                else:
+                    winner_id = -1
 
-            if record[1] == self.bot_b.name:
-                self.bot_b.id = record[0]
+                curr.execute(match_sql, (self.bot_a.id, self.bot_b.id, self.points_a, self.points_b, winner_id))
+
+                match_id = curr.fetchone()[0]
+
+                record_sql = ("INSERT INTO rounds"
+                            "(match_id, round, move_a, move_b, score_a, score_b)"
+                            "VALUES (%s, %s, %s, %s, %s, %s)")
+                
+                curr.executemany(record_sql,
+                                [(match_id, *x) for x in self.round_data])
         
-        
-        match_sql = ("INSERT INTO matches"
-                     "(automata_a, automata_b, points_a, points_b, winner)"
-                     "VALUES (%s, %s, %s, %s, %s)"
-                     "RETURNING id")
-        
-        if self.points_a > self.points_b:
-            winner_id = self.bot_a.id
-        elif self.points_a < self.points_b:
-            winner_id = self.bot_b.id
-        else:
-            winner_id = -1
 
-        curr.execute(match_sql, (self.bot_a.id, self.bot_b.id, self.points_a, self.points_b, winner_id))
-
-        match_id = curr.fetchone()[0]
-
-        record_sql = ("INSERT INTO rounds"
-                      "(match_id, round, move_a, move_b, score_a, score_b)"
-                      "VALUES (%s, %s, %s, %s, %s, %s)")
-        
-        curr.executemany(record_sql,
-                         [(match_id, *x) for x in self.round_data])
-        
-        conn.commit()
-        curr.close()
-        conn.close()
-    
     def results(self):
         if self.points_b > self.points_a:
             print(f"{self.bot_b.name} wins with {self.points_b} points")
@@ -90,25 +82,24 @@ class Simulator:
         else:
             print(f"Tie at {self.points_a} points")
             
+def get_all_bots():
+    bots = []
+    for sub in Automata.__subclasses__():
+        bots.append(sub)
+    return bots
 
 
 if __name__ == "__main__":
-    from algos.Evil import Evil
-    from algos.Nice import Nice
-    from algos.BadTitForTat import BadTitForTat
-    from algos.Dumb import Dumb
-    from algos.Forgiver import Forgiver
-    from algos.Grudger import Grudger
-    from algos.Perverse import Perverse
-    from algos.TitForTat import TitForTat
+    import algos
+    from algos.Automata import Automata
 
-    autos = [Evil(), Nice(), BadTitForTat(), Dumb(), Forgiver(), Grudger(), Perverse(), TitForTat()]
+    autos = get_all_bots()
 
     for bot_a in autos:
         for bot_b in autos:
-            if bot_a.name == bot_b.name:
+            if bot_a == bot_b:
                 continue
-            sim = Simulator(bot_a=bot_a, bot_b=bot_b)
+            sim = Simulator(bot_a=bot_a(), bot_b=bot_b())
 
             sim.run()
 
